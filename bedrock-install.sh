@@ -17,4 +17,47 @@ Terminal=true
 Categories=System;Settings;
 EOF
 
-chmod 644 /usr/share/applications/pardus-pm-addon.desktop
+apt -qqq install fastfetch -y
+mkdir -p /etc/fastfetch
+cat > /etc/fastfetch/config.jsonc << 'EOF'
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+  "logo": {
+    "source": "pardus"
+  },
+  "display": {
+    "color": "33"
+  },
+  "modules": [
+    "title",
+    "separator",
+    { "type": "os", "format": "Pardus GNU/Linux 25 (yirmibeş)" },
+    "host",
+    "kernel",
+    "uptime",
+    "packages",
+    "shell",
+    "display",
+    "de",
+    "wm",
+    "wmtheme",
+    "theme",
+    "icons",
+    "font",
+    "cursor",
+    "terminal",
+    "terminalfont",
+    "cpu",
+    "gpu",
+    "memory",
+    "swap",
+    "disk",
+    "localip",
+    "battery",
+    "poweradapter",
+    "locale",
+    "break",
+    "colors"
+  ]
+}
+EOF
