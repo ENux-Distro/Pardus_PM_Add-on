@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+
+echo
+ARCH_MIRROR="https://fastly.mirror.pkgbuild.com/"
+ALPINE_MIRROR="https://dl-cdn.alpinelinux.org/alpine/"
+VOID_MIRROR="https://repo-default.voidlinux.org/"
+GENTOO_MIRROR="https://gentoo.osuosl.org/"
+
+while true; do
+  echo "Select language / Dil seçiniz:"
+  echo "1) Türkçe"
+  echo "2) English"
+  read -r LANG_CHOICE
+
+  case "$LANG_CHOICE" in
+    1)
+      LANG="tr"
+      break
+      ;;
+    2)
+      LANG="en"
+      break
+      ;;
+    *)
+      echo "Invalid selection. Please choose 1 or 2."
+      ;;
+  esac
+done
+
+if [[ "$LANG" == "tr" ]]; then
+  BEDROCK_NOT_FOUND="Bu programı kullanabilmeniz için Pardus'u kurmanız gerekmektedir"
+  DONE="Paket Yöneticileri Başarıyla Eklenmiştir"
+else
+  DONE="The Package Managers Have Been Added Succesfully"
+  BEDROCK_NOT_FOUND="You need to install Pardus in order to use this program"
+fi
+
+echo
+if [[ "$LANG" == "tr" ]]; then
+  echo "Eklemek istediğiniz paket yöneticilerini seçin:"
+  echo "(Boşlukla ayırın, örn: arch alpine nix)"
+else
+  echo "Select package managers to add:"
+  echo "(Separate with spaces, e.g.: arch alpine nix)"
+fi
+
+echo
+echo "arch     - Arch Linux (pacman)"
+echo "alpine   - Alpine Linux (apk)"
+echo "void     - Void Linux (xbps)"
+echo "gentoo   - Gentoo (emerge/portage)"
+echo "centos   - CentOS/Fedora (dnf/rpm)"
+echo "opensuse - openSUSE (zypper)"
+echo "nix      - NixOS (daemon)"
+echo
+
+read -r PM_SELECTION
+
+if ! command -v brl >/dev/null 2>&1; then
+  echo "$BEDROCK_NOT_FOUND"
+  exit 0
+fi
+
+for pm in $PM_SELECTION; do
+  case "$pm" in
+    arch)
+      echo "Fetching Arch with mirror"
+      brl fetch arch --mirror "$ARCH_MIRROR" || true
+      ;;
+    alpine)
+      echo "Fetching Alpine with mirror"
+      brl fetch alpine --mirror "$ALPINE_MIRROR" || true
+      ;;
+    void)
+      echo "Fetching Void with mirror"
+      brl fetch void --mirror "$VOID_MIRROR" || true
+      ;;
+    gentoo)
+      echo "Fetching Gentoo with mirror"
+      brl fetch gentoo --mirror "$GENTOO_MIRROR" || true
+      ;;
+    opensuse)
+      echo "Fetching openSUSE"
+      brl fetch opensuse || true
+      ;;
+    centos)
+      echo "Fetching CentOS"
+      brl fetch centos || true
+      ;;
+    nix)
+      echo "Installing Nix (daemon mode)"
+      sh <(curl -L https://nixos.org/nix/install) --daemon
+      ;;
+    *)
+      echo "Unknown option ignored: $pm"
+      ;;
+  esac
+done
+
+echo
+echo "$DONE"
+exit 0
