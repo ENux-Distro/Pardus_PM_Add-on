@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+[ "$EUID" -ne 0 ] && echo "Run as root / Root ile çalıştırınız" && exit 1
+
 echo
 ARCH_MIRROR="https://fastly.mirror.pkgbuild.com/"
 ALPINE_MIRROR="https://dl-cdn.alpinelinux.org/alpine/"
