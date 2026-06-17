@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Pardus Package Manager Add-On Tool icon.
+     A stack of offset layers = multiple package ecosystems, in the Pardus
+     black / yellow / white palette. Scalable; reads cleanly down to 16px. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <rect x="8" y="8" width="240" height="240" rx="48" fill="#1b1b1b"/>
+  <rect x="8" y="8" width="240" height="240" rx="48" fill="none" stroke="#3a3a3a" stroke-width="2"/>
+
+  <!-- bottom layer (white) -->
+  <rect x="62" y="150" width="132" height="40" rx="10" fill="#ffffff"/>
+  <!-- middle layer (muted yellow) -->
+  <rect x="62" y="108" width="132" height="40" rx="10" fill="#d6b200"/>
+  <!-- top layer (Pardus yellow) with a notch implying the active package -->
+  <rect x="62" y="66" width="132" height="40" rx="10" fill="#ffd400"/>
+  <rect x="150" y="74" width="36" height="24" rx="6" fill="#1b1b1b"/>
+  <rect x="156" y="80" width="24" height="12" rx="3" fill="#ffd400"/>
+</svg>

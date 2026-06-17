@@ -1,0 +1,4 @@
+# Runtime dependencies for the Pardus Package Manager Add-On Tool.
+# The GUI uses PyGObject/GTK4, which on Pardus is provided by the system
+# package `python3-gi` + `gir1.2-gtk-4.0` (do not pip-install it).
+textual>=0.60

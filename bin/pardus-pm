@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Launcher for the Pardus Package Manager Add-On Tool.
+# Uses the project virtualenv if present (Textual lives there), otherwise the
+# system Python. Forwards all arguments to the dispatcher.
+set -euo pipefail
+
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+if [ -x "$here/.venv/bin/python" ]; then
+    python="$here/.venv/bin/python"
+else
+    python="$(command -v python3)"
+fi
+
+cd "$here"
+exec "$python" -m parduspm "$@"
