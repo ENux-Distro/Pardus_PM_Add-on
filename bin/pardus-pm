@@ -4,7 +4,10 @@
 # system Python. Forwards all arguments to the dispatcher.
 set -euo pipefail
 
-here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Resolve the real location even when launched via a symlink (e.g.
+# /usr/bin/pardus-pm -> /path/to/checkout/bin/pardus-pm), so the venv and the
+# parduspm package are always found in the actual checkout.
+here="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
 
 if [ -x "$here/.venv/bin/python" ]; then
     python="$here/.venv/bin/python"

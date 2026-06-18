@@ -47,12 +47,32 @@ without confirmation.
 The simplest path is the Makefile (`make help` lists every target):
 
 ```bash
-make install      # create the venv (--system-site-packages) and install deps
-make dev          # also install test dependencies
+make dev          # set up a local venv (./.venv) for development
 ```
 
-The venv uses `--system-site-packages` so the system GTK bindings stay
-available while Textual is installed alongside them. To do it by hand:
+This creates a venv with `--system-site-packages` so the system GTK bindings
+stay available while Textual is installed alongside them.
+
+### System-wide install
+
+```bash
+make install      # copy to /usr/share/pardus-pm and link `pardus-pm` into /usr/bin
+```
+
+`make install` copies the project to `/usr/share/pardus-pm`, builds a fresh
+venv there, and symlinks `/usr/bin/pardus-pm` →
+`/usr/share/pardus-pm/bin/pardus-pm`, so you can run `pardus-pm` from anywhere.
+It uses `sudo` for the system paths. The install is self-contained — it does
+not depend on this checkout afterwards. Remove it with `make uninstall`.
+
+Override the prefix or stage into a packaging root:
+
+```bash
+make install PREFIX=/usr/local
+make install DESTDIR=/tmp/pkg SUDO=   # unprivileged staging for packaging
+```
+
+### Manual dev setup (without make)
 
 ```bash
 python3 -m venv --system-site-packages .venv
