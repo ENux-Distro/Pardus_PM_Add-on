@@ -44,8 +44,15 @@ without confirmation.
 
 ### Setup
 
-The repo ships with a virtualenv created with `--system-site-packages` so the
-system GTK bindings stay available while Textual is installed in the venv:
+The simplest path is the Makefile (`make help` lists every target):
+
+```bash
+make install      # create the venv (--system-site-packages) and install deps
+make dev          # also install test dependencies
+```
+
+The venv uses `--system-site-packages` so the system GTK bindings stay
+available while Textual is installed alongside them. To do it by hand:
 
 ```bash
 python3 -m venv --system-site-packages .venv
@@ -53,6 +60,13 @@ python3 -m venv --system-site-packages .venv
 ```
 
 ## Running
+
+```bash
+make run                   # TUI (default)
+make gui                   # graphical UI
+```
+
+Or call the launcher directly for the headless subcommands:
 
 ```bash
 ./bin/pardus-pm            # TUI (default)
@@ -129,7 +143,7 @@ Activity is written to `$XDG_STATE_HOME/pardus-pm/activity.log`
 ## Tests
 
 ```bash
-.venv/bin/python -m pytest tests/ -q
+make test
 ```
 
 The tests stub command execution and privilege checks, so they never modify the
