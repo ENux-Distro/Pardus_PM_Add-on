@@ -196,6 +196,41 @@ class Backend:
         self.log.success(f"{pm.name} {done} successfully")
         return OperationResult(pm.id, action, True, f"{pm.name} {done} successfully.")
 
+    def run_steps(self, label: str, steps: list[Step], on_line: LineCallback | None = None) -> tuple[bool, str]:
+        """Run an arbitrary step list with one escalation, streaming output.
+
+        Used by pardus-pmm to install individual packages through whichever
+        manager owns them. Returns (ok, message).
+        """
+        if not steps:
+            return False, "No command to run."
+        self.log.action(label)
+
+        needs_root = any(s.privilege is Privilege.ROOT for s in steps)
+        try:
+            prefix = self._escalation_prefix(needs_root)
+        except PrivilegeError as exc:
+            self.log.error(str(exc))
+            return False, str(exc)
+
+        script = self._build_script(steps, needs_root or self.is_root())
+        current = {"label": None}
+
+        def handle(line: str) -> None:
+            if line.startswith(STEP_MARKER):
+                current["label"] = line[len(STEP_MARKER):]
+                return
+            if on_line:
+                on_line(line)
+
+        code = self._run_script(script, prefix, handle)
+        if code != 0:
+            msg = f"Failed (exit {code}): {current['label'] or label}"
+            self.log.error(msg)
+            return False, msg
+        self.log.success(f"{label} — done")
+        return True, "Success"
+
     def _run_script(self, script: str, prefix: list[str], on_line: LineCallback | None) -> int:
         """Write the script to a temp file and run it once, streaming output.
 

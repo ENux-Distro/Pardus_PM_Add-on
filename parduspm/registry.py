@@ -135,6 +135,17 @@ NIX = PackageManager(
     detect_command="nix",
     detect_paths=["/nix/var/nix/profiles/default/bin/nix"],
     install_steps=[
+        # A previous Nix install leaves *.backup-before-nix copies; the
+        # installer aborts if one already exists. Restore each backup over its
+        # original first, which clears the stale backup and gives the installer
+        # a clean rc file to work from. (Needs root to write under /etc.)
+        Step(["sh", "-c",
+              "for f in /etc/bash.bashrc /etc/bashrc /etc/zshrc /etc/profile "
+              "/etc/zsh/zshrc /etc/zsh/zprofile; do "
+              "[ -e \"$f.backup-before-nix\" ] && mv -f \"$f.backup-before-nix\" \"$f\"; "
+              "done; true"],
+             privilege=Privilege.ROOT, shell=True,
+             description="Clear any stale Nix backups of shell rc files"),
         # Official multi-user installer. --daemon for a system-wide install,
         # --yes to skip the interactive confirmation.
         Step(["sh", "-c",
@@ -166,7 +177,9 @@ NIX = PackageManager(
     ],
     notes=(
         "Nix uses the official network installer and creates /nix plus system "
-        "users (nixbld*). Removal is best-effort; a reboot is recommended afterwards."
+        "users (nixbld*). Install first clears stale *.backup-before-nix files so "
+        "the installer does not abort. Removal is best-effort; a reboot is "
+        "recommended afterwards."
     ),
 )
 
@@ -194,6 +207,19 @@ HOMEBREW = PackageManager(
               '"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'],
              privilege=Privilege.USER, shell=True,
              description="Run the official Homebrew installer as your user"),
+        # The installer does not put brew on PATH; add `brew shellenv` to the
+        # user's shell startup files (idempotently) so `brew` works in new
+        # shells without manual setup.
+        Step(["sh", "-c",
+              'BREW=/home/linuxbrew/.linuxbrew/bin/brew; '
+              '[ -x "$BREW" ] || BREW="$HOME/.linuxbrew/bin/brew"; '
+              'for f in "$HOME/.bashrc" "$HOME/.profile"; do '
+              'touch "$f"; '
+              'grep -qF "brew shellenv" "$f" || '
+              'printf \'\\neval "$(%s shellenv)"\\n\' "$BREW" >> "$f"; '
+              'done'],
+             privilege=Privilege.USER, shell=True,
+             description="Add Homebrew to your shell PATH"),
     ],
     remove_steps=[
         Step(["bash", "-c",
@@ -201,8 +227,16 @@ HOMEBREW = PackageManager(
               '"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)"'],
              privilege=Privilege.USER, shell=True,
              description="Run the official Homebrew uninstaller as your user"),
+        # Drop the `brew shellenv` line we added on install, so removed shells
+        # don't error trying to eval a now-missing brew.
+        Step(["sh", "-c",
+              'for f in "$HOME/.bashrc" "$HOME/.profile"; do '
+              '[ -f "$f" ] && sed -i "/brew shellenv/d" "$f"; done; true'],
+             privilege=Privilege.USER, shell=True,
+             description="Remove Homebrew from your shell PATH"),
     ],
-    notes="Homebrew must be installed and removed as a normal user, never as root.",
+    notes=("Homebrew must be installed and removed as a normal user, never as root. "
+           "Install adds `brew shellenv` to your ~/.bashrc and ~/.profile."),
 )
 
 EPKG = PackageManager(

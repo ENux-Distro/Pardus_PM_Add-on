@@ -58,6 +58,10 @@ tui: ## Launch the text UI
 gui: ## Launch the graphical UI
 	./bin/pardus-pm gui
 
+.PHONY: pmm
+pmm: ## Launch the cross-manager search TUI (pardus-pmm)
+	./bin/pardus-pmm
+
 .PHONY: test
 test: dev ## Run the test suite
 	$(BIN)/python -m pytest tests/ -q
@@ -78,13 +82,14 @@ install: ## Install to $(SHAREDIR) and link the launcher into $(BINDIR)
 	$(SUDO) "$(SHAREDIR)/.venv/bin/pip" install --upgrade pip
 	$(SUDO) "$(SHAREDIR)/.venv/bin/pip" install -r "$(SHAREDIR)/requirements.txt"
 	$(SUDO) ln -sf "$(LINKSRC)" "$(BINDIR)/pardus-pm"
-	@echo "Installed to $(SHAREDIR); 'pardus-pm' linked into $(BINDIR)"
+	$(SUDO) ln -sf "$(PREFIX)/share/pardus-pm/bin/pardus-pmm" "$(BINDIR)/pardus-pmm"
+	@echo "Installed to $(SHAREDIR); 'pardus-pm' and 'pardus-pmm' linked into $(BINDIR)"
 
 .PHONY: uninstall
-uninstall: ## Remove the system install and the launcher symlink
-	$(SUDO) rm -f "$(BINDIR)/pardus-pm"
+uninstall: ## Remove the system install and the launcher symlinks
+	$(SUDO) rm -f "$(BINDIR)/pardus-pm" "$(BINDIR)/pardus-pmm"
 	$(SUDO) rm -rf "$(SHAREDIR)"
-	@echo "Removed $(SHAREDIR) and $(BINDIR)/pardus-pm"
+	@echo "Removed $(SHAREDIR) and the launcher symlinks"
 
 .PHONY: install-user
 install-user: ## Install the icon + desktop entry for the current user

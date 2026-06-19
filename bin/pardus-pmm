@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Launcher for pardus-pmm (cross-package-manager search TUI).
+# Mirrors bin/pardus-pm: prefer the project venv, resolve symlinks.
+set -euo pipefail
+
+here="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+
+if [ -x "$here/.venv/bin/python" ]; then
+    python="$here/.venv/bin/python"
+else
+    python="$(command -v python3)"
+fi
+
+cd "$here"
+exec "$python" -m tui.pmm "$@"

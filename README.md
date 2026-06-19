@@ -97,6 +97,50 @@ Or call the launcher directly for the headless subcommands:
 ./bin/pardus-pm remove  flatpak
 ```
 
+## pardus-pmm — cross-manager package search
+
+`pardus-pmm` is a companion TUI (same look as the pardus-pm text UI) that drives
+all the installed package ecosystems from one place — inspired by Bedrock
+Linux's `pmm`. A left-hand menu picks the operation and the main area adapts:
+
+```bash
+make pmm            # or: ./bin/pardus-pmm
+```
+
+| Operation | What it does                                                        |
+|-----------|---------------------------------------------------------------------|
+| Search    | Query every search-capable manager at once; results are tagged by manager (`[APT]`, `[Flatpak]`, …). Highlight one and press `i` to install it from that manager. |
+| Install   | Type a package, pick a manager, press `i`.                          |
+| Remove    | Type a package, pick a manager, press `r`.                          |
+| Update    | Press `u` to refresh package metadata across all capable managers.  |
+| Upgrade   | Press `u` to upgrade everything installed across all capable managers. |
+
+Searches and operations run in the background, so a slow network manager never
+blocks the others. Only managers present on the system are offered, and only for
+the operations they support.
+
+| Manager  | search | install | remove | update | upgrade |
+|----------|:------:|:-------:|:------:|:------:|:-------:|
+| APT      | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Flatpak  | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Snap     | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Nix      | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Homebrew | ✓ | ✓ | ✓ | ✓ | ✓ |
+| EPkg     |   | ✓ |   |   |   |
+
+| Key         | Action                                          |
+|-------------|-------------------------------------------------|
+| ↑ / ↓       | Move within the focused list                    |
+| `Enter`     | Dive into the highlighted operation / run search|
+| `i`         | Install (search result or typed package)        |
+| `r`         | Remove the typed package                        |
+| `u`         | Run Update / Upgrade across all listed managers |
+| `q` / `Esc` | Exit                                            |
+
+> **EPkg note:** EPkg supports install only, and its `install` syntax is a
+> best-effort guess in [`parduspm/search.py`](parduspm/search.py); adjust it to
+> match your actual `epkg` build.
+
 ### Desktop integration (menu + taskbar icon)
 
 The GUI sets its own Pardus icon at runtime, so it no longer shows the generic
@@ -127,12 +171,15 @@ panel restart or re-login may be needed for the taskbar icon to refresh.
 parduspm/            shared backend (no UI code)
   registry.py        static definitions of each package manager + its steps
   backend.py         detection, privilege escalation, streaming execution
+  search.py          cross-manager package search + per-manager install (pmm)
   logger.py          activity log (in-memory ring + file + live subscribers)
   __main__.py        CLI dispatcher (tui / gui / status / install / remove)
-tui/app.py           Textual text UI
+tui/app.py           Textual text UI for pardus-pm
+tui/pmm.py           Textual text UI for pardus-pmm (cross-manager search)
 gui/app.py           GTK 4 graphical UI
-tests/               backend unit tests (no real system changes)
-bin/pardus-pm        launcher (uses .venv if present)
+tests/               unit tests (no real system changes)
+bin/pardus-pm        launcher for the management tool
+bin/pardus-pmm       launcher for the cross-manager search TUI
 ```
 
 Both frontends depend only on `parduspm.backend`. The backend is the single
