@@ -30,7 +30,7 @@ without confirmation.
 | Snap     | Pardus apt repositories (`snapd`)       | root      |
 | Nix      | Official multi-user installer           | mixed     |
 | Homebrew | Official installer (runs as your user)  | user      |
-| EPkg     | ENux repository (single script)         | root      |
+| EPkg     | ENux-Distro repository (single script)         | root      |
 
 ## Requirements
 
@@ -53,17 +53,13 @@ make dev          # set up a local venv (./.venv) for development
 This creates a venv with `--system-site-packages` so the system GTK bindings
 stay available while Textual is installed alongside them.
 
-### System-wide install
+## Installation
+
+### Installation From the Git Cloned Repository
 
 ```bash
 make install      # copy to /usr/share/pardus-pm and link `pardus-pm` into /usr/bin
 ```
-
-`make install` copies the project to `/usr/share/pardus-pm`, builds a fresh
-venv there, and symlinks `/usr/bin/pardus-pm` →
-`/usr/share/pardus-pm/bin/pardus-pm`, so you can run `pardus-pm` from anywhere.
-It uses `sudo` for the system paths. The install is self-contained — it does
-not depend on this checkout afterwards. Remove it with `make uninstall`.
 
 Override the prefix or stage into a packaging root:
 
@@ -72,20 +68,11 @@ make install PREFIX=/usr/local
 make install DESTDIR=/tmp/pkg SUDO=   # unprivileged staging for packaging
 ```
 
-### Debian package (.deb)
+### Installation via the .deb Package
 
 ```bash
-make deb            # builds dist/pardus-pm_<version>_all.deb
-```
-
-The package is architecture-independent and installs the payload to
-`/usr/share/pardus-pm`, with `pardus-pm` and `pardus-pmm` symlinked into
-`/usr/bin`, desktop entries, and the icon. Runtime dependencies
-(`python3-gi`, `gir1.2-gtk-4.0`, `python3-textual`) are declared and pulled from
-the repositories — no bundled virtualenv. Install it with:
-
-```bash
-sudo apt install ./dist/pardus-pm_1.0.0_all.deb
+wget https://github.com/ENux-Distro/Pardus_PM_Add-on/releases/download/Pardus-Kernel-Swap/pardus-kernel-swap_amd64.deb      # Downloads the .deb package
+sudo apt install ./pardus-kernel-swap_amd64.deb      # Installs the .deb package via apt using sudo
 ```
 
 ### Manual dev setup (without make)
