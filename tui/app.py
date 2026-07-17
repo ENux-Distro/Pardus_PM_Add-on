@@ -24,6 +24,7 @@ from textual.widgets import (
 )
 
 from parduspm import registry
+from parduspm import i18n
 from parduspm.backend import Backend, Status
 from parduspm.logger import ActivityLog, Entry
 
@@ -37,11 +38,12 @@ class PMRow(ListItem):
         self.status = status
 
     def compose(self) -> ComposeResult:
-        marker = "●" if self.status is Status.INSTALLED else "○"
-        klass = "installed" if self.status is Status.INSTALLED else "absent"
+        installed = self.status is Status.INSTALLED
+        marker = "●" if installed else "○"
+        klass = "installed" if installed else "absent"
         yield Static(
-            f"{marker} {self.pm.name:<12} [{self.status.value}]",
-            classes=klass,
+            f"{marker} {self.pm.name:<12} [{i18n.status_text(installed)}]",
+            classes=klass, markup=False,
         )
 
 
@@ -60,7 +62,7 @@ class ConfirmScreen(ModalScreen[bool]):
             yield Static(self._message, id="dialog-message")
             with Horizontal(id="dialog-buttons"):
                 yield Button(self._confirm_label, variant="primary", id="ok")
-                yield Button("Cancel", variant="default", id="cancel")
+                yield Button(i18n.t("cancel"), variant="default", id="cancel")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         self.dismiss(event.button.id == "ok")
@@ -88,16 +90,16 @@ class PardusPMApp(App):
     """
 
     BINDINGS = [
-        ("up", "cursor_up", "Up"),
-        ("down", "cursor_down", "Down"),
-        ("i", "install", "Install"),
-        ("r", "remove", "Remove"),
-        ("enter", "details", "Details"),
-        ("q", "quit", "Exit"),
-        ("escape", "quit", "Exit"),
+        ("up", "cursor_up", i18n.t("up")),
+        ("down", "cursor_down", i18n.t("down")),
+        ("i", "install", i18n.t("install")),
+        ("r", "remove", i18n.t("remove")),
+        ("enter", "details", i18n.t("details_btn")),
+        ("q", "quit", i18n.t("exit")),
+        ("escape", "quit", i18n.t("exit")),
     ]
 
-    TITLE = "Pardus Package Manager Add-On Tool"
+    TITLE = i18n.t("app_title")
 
     def __init__(self):
         super().__init__()
@@ -110,13 +112,13 @@ class PardusPMApp(App):
         yield Header(show_clock=True)
         with Horizontal(id="body"):
             with Vertical(id="list-pane"):
-                yield Label("Package Managers", classes="installed")
+                yield Label(i18n.t("package_managers"), classes="installed")
                 yield ListView(id="pm-list")
             with Vertical(id="detail-pane"):
                 yield Static("", id="detail-title")
                 yield Static("", id="detail-body")
         with Vertical(id="log-pane"):
-            yield Label("Activity Log")
+            yield Label(i18n.t("activity_log"))
             yield Log(id="activity", highlight=False)
         yield Footer()
 
@@ -146,12 +148,13 @@ class PardusPMApp(App):
         pm = self._current_pm()
         if not pm:
             return
-        status = self.statuses[pm.id].value
+        status = i18n.status_text(self.statuses[pm.id] is Status.INSTALLED)
         self.query_one("#detail-title", Static).update(f"{pm.name}  —  {status}")
-        features = "\n".join(f"  • {f}" for f in pm.features)
-        note = f"\n\nNote: {pm.notes}" if pm.notes else ""
+        features = "\n".join(f"  • {f}" for f in i18n.pm_features(pm))
+        notes = i18n.pm_notes(pm)
+        note = f"\n\n{i18n.t('note')}: {notes}" if notes else ""
         self.query_one("#detail-body", Static).update(
-            f"{pm.description}\n\nFeatures:\n{features}{note}"
+            f"{i18n.pm_description(pm)}\n\n{i18n.t('features')}:\n{features}{note}"
         )
 
     def _on_log_entry(self, entry: Entry) -> None:
@@ -194,17 +197,20 @@ class PardusPMApp(App):
 
         installed = self.statuses[pm.id] is Status.INSTALLED
         if action == "install" and installed:
-            self.activity.info(f"{pm.name} is already installed")
+            self.activity.info(i18n.t("already_installed", name=pm.name))
             return
         if action == "remove" and not installed:
-            self.activity.info(f"{pm.name} is not installed")
+            self.activity.info(i18n.t("not_currently_installed", name=pm.name))
             return
 
-        title = "Install Package Manager" if action == "install" else "Remove Package Manager"
-        verb = "install" if action == "install" else "remove"
-        prep = "on" if action == "install" else "from"
-        message = f"You are about to {verb} {pm.name} {prep} this system.\n\nContinue?"
-        label = "Install" if action == "install" else "Remove"
+        if action == "install":
+            title = i18n.t("dlg_install_title")
+            message = i18n.t("confirm_install_pm", name=pm.name) + "\n\n" + i18n.t("continue_q")
+            label = i18n.t("install")
+        else:
+            title = i18n.t("dlg_remove_title")
+            message = i18n.t("confirm_remove_pm", name=pm.name) + "\n\n" + i18n.t("continue_q")
+            label = i18n.t("remove")
 
         def after_confirm(confirmed: bool | None) -> None:
             if confirmed:

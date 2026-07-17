@@ -72,6 +72,22 @@ make install PREFIX=/usr/local
 make install DESTDIR=/tmp/pkg SUDO=   # unprivileged staging for packaging
 ```
 
+### Debian package (.deb)
+
+```bash
+make deb            # builds dist/pardus-pm_<version>_all.deb
+```
+
+The package is architecture-independent and installs the payload to
+`/usr/share/pardus-pm`, with `pardus-pm` and `pardus-pmm` symlinked into
+`/usr/bin`, desktop entries, and the icon. Runtime dependencies
+(`python3-gi`, `gir1.2-gtk-4.0`, `python3-textual`) are declared and pulled from
+the repositories — no bundled virtualenv. Install it with:
+
+```bash
+sudo apt install ./dist/pardus-pm_1.0.0_all.deb
+```
+
 ### Manual dev setup (without make)
 
 ```bash
@@ -165,6 +181,21 @@ panel restart or re-login may be needed for the taskbar icon to refresh.
 | `Enter`    | Show details         |
 | `q` / `Esc`| Exit                 |
 
+## Language (Turkish / English)
+
+Both tools are bilingual. The language is chosen automatically from the locale:
+a locale starting with `tr` (e.g. `tr_TR.UTF-8`) shows Turkish, everything else
+falls back to English. Force it explicitly with `PARDUS_PM_LANG`:
+
+```bash
+PARDUS_PM_LANG=tr ./bin/pardus-pm      # Türkçe
+PARDUS_PM_LANG=en ./bin/pardus-pm      # English
+```
+
+Translations live in [`parduspm/i18n.py`](parduspm/i18n.py) — a small dict-based
+table (no gettext/`.mo` build step), covering UI strings, status words, package
+descriptions, and the main activity-log messages.
+
 ## Architecture
 
 ```
@@ -172,6 +203,7 @@ parduspm/            shared backend (no UI code)
   registry.py        static definitions of each package manager + its steps
   backend.py         detection, privilege escalation, streaming execution
   search.py          cross-manager package search + per-manager install (pmm)
+  i18n.py            locale-based Turkish / English translations
   logger.py          activity log (in-memory ring + file + live subscribers)
   __main__.py        CLI dispatcher (tui / gui / status / install / remove)
 tui/app.py           Textual text UI for pardus-pm

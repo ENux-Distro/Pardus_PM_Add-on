@@ -95,6 +95,10 @@ uninstall: ## Remove the system install and the launcher symlinks
 install-user: ## Install the icon + desktop entry for the current user
 	./packaging/install-user.sh
 
+.PHONY: deb
+deb: ## Build a .deb package into dist/
+	./packaging/build-deb.sh
+
 # --- cleanup ----------------------------------------------------------------
 
 .PHONY: clean

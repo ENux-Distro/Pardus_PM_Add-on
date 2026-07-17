@@ -5,6 +5,7 @@ __pycache__/
 .eggs/
 build/
 dist/
+*.deb
 
 # Virtual environments
 .venv/
@@ -25,3 +26,4 @@ env/
 # Local runtime artifacts (the activity log lives in XDG_STATE_HOME, but ignore
 # any stray copies written into the checkout)
 *.log
+pmm

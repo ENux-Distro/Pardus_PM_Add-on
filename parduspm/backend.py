@@ -25,6 +25,7 @@ from collections.abc import Callable, Iterator
 from dataclasses import asdict, dataclass
 
 from . import registry
+from . import i18n
 from .logger import ActivityLog
 from .registry import PackageManager, Privilege, Step
 
@@ -74,7 +75,7 @@ class Backend:
             status = self.detect(pm)
             result[pm.id] = status
             if not quiet and status is Status.INSTALLED:
-                self.log.info(f"Detected {pm.name}")
+                self.log.info(i18n.t("log_detected", name=pm.name))
         return result
 
     def _candidate_paths(self, pm: PackageManager) -> list[str]:
@@ -157,8 +158,8 @@ class Backend:
         steps: list[Step],
         on_line: LineCallback | None,
     ) -> OperationResult:
-        verb = "installation" if action == "install" else "removal"
-        self.log.action(f"User requested {verb} of {pm.name}")
+        self.log.action(i18n.t("log_req_install" if action == "install" else "log_req_remove",
+                               name=pm.name))
 
         if not steps:
             return OperationResult(pm.id, action, False, "No procedure defined.")
@@ -192,9 +193,9 @@ class Backend:
             self.log.error(f"{pm.name}: {msg}")
             return OperationResult(pm.id, action, False, msg, current["label"])
 
-        done = "installed" if action == "install" else "removed"
-        self.log.success(f"{pm.name} {done} successfully")
-        return OperationResult(pm.id, action, True, f"{pm.name} {done} successfully.")
+        msg = i18n.t("log_install_ok" if action == "install" else "log_remove_ok", name=pm.name)
+        self.log.success(msg)
+        return OperationResult(pm.id, action, True, msg)
 
     def run_steps(self, label: str, steps: list[Step], on_line: LineCallback | None = None) -> tuple[bool, str]:
         """Run an arbitrary step list with one escalation, streaming output.

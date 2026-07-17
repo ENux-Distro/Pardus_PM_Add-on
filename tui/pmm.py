@@ -29,6 +29,7 @@ from textual.widgets import (
     ContentSwitcher, Footer, Header, Input, Label, ListItem, ListView, Log, Static,
 )
 
+from parduspm import i18n
 from parduspm.backend import Backend
 from parduspm.logger import ActivityLog, Entry
 from parduspm.search import SearchEngine, SearchResult, PackageSource, BY_ID
@@ -36,11 +37,11 @@ from parduspm.search import SearchEngine, SearchResult, PackageSource, BY_ID
 from tui.app import ConfirmScreen
 
 MODES = [
-    ("search", "Search"),
-    ("install", "Install"),
-    ("remove", "Remove"),
-    ("update", "Update"),
-    ("upgrade", "Upgrade"),
+    ("search", i18n.t("op_search")),
+    ("install", i18n.t("op_install")),
+    ("remove", i18n.t("op_remove")),
+    ("update", i18n.t("op_update")),
+    ("upgrade", i18n.t("op_upgrade")),
 ]
 
 
@@ -94,14 +95,14 @@ class PardusPMMApp(App):
     """
 
     BINDINGS = [
-        ("i", "install", "Install"),
-        ("r", "remove", "Remove"),
-        ("u", "run_all", "Update/Upgrade"),
-        ("q", "quit", "Exit"),
-        ("escape", "quit", "Exit"),
+        ("i", "install", i18n.t("install")),
+        ("r", "remove", i18n.t("remove")),
+        ("u", "run_all", i18n.t("update_upgrade")),
+        ("q", "quit", i18n.t("exit")),
+        ("escape", "quit", i18n.t("exit")),
     ]
 
-    TITLE = "Pardus Package Manager Manager"
+    TITLE = i18n.t("pmm_title")
 
     def __init__(self):
         super().__init__()
@@ -117,42 +118,40 @@ class PardusPMMApp(App):
         yield Header(show_clock=True)
         with Horizontal(id="body"):
             with Vertical(id="modes-pane"):
-                yield Label("Operations")
+                yield Label(i18n.t("operations"))
                 yield ListView(*[ListItem(Label(name)) for _, name in MODES], id="modes")
             with ContentSwitcher(initial="search", id="main"):
                 # Search
                 with Horizontal(id="search"):
                     with Vertical():
-                        yield Input(placeholder="Search a package, then Enter", id="search-input",
+                        yield Input(placeholder=i18n.t("search_placeholder"), id="search-input",
                                     classes="pkg-input")
                         yield ListView(id="results")
                     with Vertical(id="search-detail"):
                         yield Static("", id="detail-title")
-                        yield Static("Type a query and press Enter.", id="detail-body")
+                        yield Static(i18n.t("type_query"), id="detail-body")
                 # Install
                 with Vertical(id="install"):
-                    yield Input(placeholder="Package to install", id="install-input",
+                    yield Input(placeholder=i18n.t("install_placeholder"), id="install-input",
                                 classes="pkg-input")
-                    yield Label("Pick a manager, then press 'i':", classes="hint")
+                    yield Label(i18n.t("pick_manager_i"), classes="hint")
                     yield ListView(id="install-mgrs")
                 # Remove
                 with Vertical(id="remove"):
-                    yield Input(placeholder="Package to remove", id="remove-input",
+                    yield Input(placeholder=i18n.t("remove_placeholder"), id="remove-input",
                                 classes="pkg-input")
-                    yield Label("Pick a manager, then press 'r':", classes="hint")
+                    yield Label(i18n.t("pick_manager_r"), classes="hint")
                     yield ListView(id="remove-mgrs")
                 # Update
                 with Vertical(id="update"):
-                    yield Label("Press 'u' to refresh package metadata for every manager below.",
-                                classes="hint")
+                    yield Label(i18n.t("update_hint"), classes="hint")
                     yield ListView(id="update-mgrs")
                 # Upgrade
                 with Vertical(id="upgrade"):
-                    yield Label("Press 'u' to upgrade everything installed across the managers below.",
-                                classes="hint")
+                    yield Label(i18n.t("upgrade_hint"), classes="hint")
                     yield ListView(id="upgrade-mgrs")
         with Vertical(id="log-pane"):
-            yield Label("Activity Log")
+            yield Label(i18n.t("activity_log"))
             yield Log(id="activity", highlight=False)
         yield Footer()
 
@@ -160,8 +159,8 @@ class PardusPMMApp(App):
         self.activity.subscribe(self._on_log_entry)
         for op in ("install", "remove", "update", "upgrade"):
             self._populate_managers(op)
-        names = ", ".join(s.name for s in self.engine.sources_for("search")) or "none detected"
-        self.activity.info(f"Search-capable managers: {names}")
+        names = ", ".join(s.name for s in self.engine.sources_for("search")) or "—"
+        self.activity.info(i18n.t("search_capable", names=names))
         self.query_one("#modes", ListView).focus()
 
     def _populate_managers(self, op: str) -> None:
@@ -214,7 +213,7 @@ class PardusPMMApp(App):
         self.results = []
         self.query_one("#results", ListView).clear()
         sources = self.engine.sources_for("search")
-        self.activity.action(f"Searching {len(sources)} manager(s) for '{term}'")
+        self.activity.action(i18n.t("searching", n=len(sources), term=term))
 
         def worker() -> None:
             for source in sources:
@@ -226,7 +225,7 @@ class PardusPMMApp(App):
         threading.Thread(target=worker, daemon=True).start()
 
     def _add_results(self, source_name: str, hits: list[SearchResult]) -> None:
-        self.activity.info(f"{source_name}: {len(hits)} result(s)")
+        self.activity.info(i18n.t("results_count", name=source_name, n=len(hits)))
         lv = self.query_one("#results", ListView)
         for r in hits:
             self.results.append(r)
@@ -236,7 +235,7 @@ class PardusPMMApp(App):
             self._show_result_details()
 
     def _search_done(self, term: str) -> None:
-        self.activity.success(f"Search complete: {len(self.results)} result(s) for '{term}'")
+        self.activity.success(i18n.t("search_complete", n=len(self.results), term=term))
 
     def _show_result_details(self) -> None:
         item = self.query_one("#results", ListView).highlighted_child
@@ -244,12 +243,12 @@ class PardusPMMApp(App):
         if not r:
             return
         self.query_one("#detail-title", Static).update(r.name)
-        body = f"Manager: {r.source_name}\nInstall id: {r.install_id}"
+        body = i18n.t("d_manager", name=r.source_name) + "\n" + i18n.t("d_install_id", id=r.install_id)
         if r.version:
-            body += f"\nVersion: {r.version}"
+            body += "\n" + i18n.t("d_version", v=r.version)
         if r.description:
             body += f"\n\n{r.description}"
-        body += "\n\nPress 'i' to install via " + r.source_name
+        body += "\n\n" + i18n.t("d_press_i", name=r.source_name)
         self.query_one("#detail-body", Static).update(body)
 
     # -- actions -----------------------------------------------------------
@@ -267,13 +266,14 @@ class PardusPMMApp(App):
             if not r:
                 return
             source = BY_ID[r.source_id]
-            msg = f"Install {r.name} ({r.install_id})\nvia {r.source_name} on this system.\n\nContinue?"
+            msg = i18n.t("confirm_install_result", name=r.name, id=r.install_id,
+                         mgr=r.source_name) + "\n\n" + i18n.t("continue_q")
 
             def after(confirmed: bool | None) -> None:
                 if confirmed:
                     self._run_single(source, "install", r.install_id)
 
-            self.push_screen(ConfirmScreen("Install Package", msg, "Install"), after)
+            self.push_screen(ConfirmScreen(i18n.t("dlg_install_pkg"), msg, i18n.t("install")), after)
             return
         if self.mode == "install":
             self._typed_op("install", "install-input", "install-mgrs")
@@ -289,34 +289,44 @@ class PardusPMMApp(App):
         op = self.mode
         sources = self.engine.sources_for(op)
         if not sources:
-            self.activity.info(f"No managers support {op}.")
+            self.activity.info(i18n.t("no_manager_supports", op=op))
             return
-        verb = "Update" if op == "update" else "Upgrade"
-        msg = f"{verb} across: {', '.join(s.name for s in sources)}.\n\nContinue?"
+        names = ", ".join(s.name for s in sources)
+        if op == "update":
+            title, label = i18n.t("dlg_update_title"), i18n.t("op_update")
+            msg = i18n.t("confirm_update_all", names=names) + "\n\n" + i18n.t("continue_q")
+        else:
+            title, label = i18n.t("dlg_upgrade_title"), i18n.t("op_upgrade")
+            msg = i18n.t("confirm_upgrade_all", names=names) + "\n\n" + i18n.t("continue_q")
 
         def after(confirmed: bool | None) -> None:
             if confirmed:
                 self._run_many(op, sources)
 
-        self.push_screen(ConfirmScreen(f"{verb} system", msg, verb), after)
+        self.push_screen(ConfirmScreen(title, msg, label), after)
 
     def _typed_op(self, op: str, input_id: str, mgrs_id: str) -> None:
         pkg = self.query_one(f"#{input_id}", Input).value.strip()
         source = self._highlighted_manager(op)
         if not pkg:
-            self.activity.info(f"Type a package name to {op}.")
+            self.activity.info(i18n.t("type_pkg_first"))
             return
         if not source:
-            self.activity.info(f"No manager selected for {op}.")
+            self.activity.info(i18n.t("no_manager_selected"))
             return
-        verb = op.capitalize()
-        msg = f"{verb} '{pkg}' via {source.name} on this system.\n\nContinue?"
+        if op == "install":
+            title, label = i18n.t("dlg_install_pkg"), i18n.t("install")
+            msg = i18n.t("confirm_install_pkg", pkg=pkg, mgr=source.name)
+        else:
+            title, label = i18n.t("dlg_remove_pkg"), i18n.t("remove")
+            msg = i18n.t("confirm_remove_pkg", pkg=pkg, mgr=source.name)
+        msg += "\n\n" + i18n.t("continue_q")
 
         def after(confirmed: bool | None) -> None:
             if confirmed:
                 self._run_single(source, op, pkg)
 
-        self.push_screen(ConfirmScreen(f"{verb} Package", msg, verb), after)
+        self.push_screen(ConfirmScreen(title, msg, label), after)
 
     # -- execution ---------------------------------------------------------
 

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Pardus Package Manager Manager
+Name[tr]=Pardus Paket Yöneticisi Yöneticisi
+Comment=Search, install and upgrade packages across every package manager
+Comment[tr]=Paketleri tüm paket yöneticilerinde ara, kur ve yükselt
+Exec=pardus-pmm
+Icon=org.pardus.PackageManagerAddon
+Terminal=true
+Categories=System;PackageManager;
+Keywords=package;search;flatpak;snap;nix;homebrew;epkg;apt;

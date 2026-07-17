@@ -23,6 +23,7 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import GLib, Gtk, Gdk, Pango  # noqa: E402
 
 from parduspm import registry  # noqa: E402
+from parduspm import i18n  # noqa: E402
 from parduspm.backend import Backend, Status  # noqa: E402
 from parduspm.logger import ActivityLog, Entry  # noqa: E402
 
@@ -95,7 +96,7 @@ button.term-btn-primary { color: #ffd400; border-color: #ffd400; }
 
 class PardusPMWindow(Gtk.ApplicationWindow):
     def __init__(self, app: Gtk.Application):
-        super().__init__(application=app, title="Pardus Package Manager Add-On Tool")
+        super().__init__(application=app, title=i18n.t("app_title"))
         self.set_default_size(940, 620)
 
         self.activity = ActivityLog()
@@ -115,7 +116,7 @@ class PardusPMWindow(Gtk.ApplicationWindow):
         root.add_css_class("term")
         self.set_child(root)
 
-        header = Gtk.Label(label=" Pardus Package Manager Add-On Tool", xalign=0)
+        header = Gtk.Label(label=" " + i18n.t("app_title"), xalign=0)
         header.add_css_class("header")
         root.append(header)
 
@@ -136,7 +137,7 @@ class PardusPMWindow(Gtk.ApplicationWindow):
         return box
 
     def _build_list_panel(self) -> Gtk.Widget:
-        panel = self._panel("Package Managers")
+        panel = self._panel(i18n.t("package_managers"))
         panel.set_size_request(250, -1)
         scroll = Gtk.ScrolledWindow(vexpand=True)
         self.listbox = Gtk.ListBox()
@@ -147,7 +148,7 @@ class PardusPMWindow(Gtk.ApplicationWindow):
         return panel
 
     def _build_detail_panel(self) -> Gtk.Widget:
-        panel = self._panel("Details")
+        panel = self._panel(i18n.t("details"))
         panel.set_hexpand(True)
         self.detail_title = Gtk.Label(xalign=0)
         self.detail_title.add_css_class("detail-title")
@@ -159,13 +160,13 @@ class PardusPMWindow(Gtk.ApplicationWindow):
         return panel
 
     def _build_action_panel(self) -> Gtk.Widget:
-        panel = self._panel("Status & Actions")
+        panel = self._panel(i18n.t("status_actions"))
         panel.set_size_request(210, -1)
         self.status_label = Gtk.Label(label="", xalign=0)
-        self.install_btn = Gtk.Button(label="[ Install ]")
+        self.install_btn = Gtk.Button(label=f"[ {i18n.t('install')} ]")
         self.install_btn.add_css_class("term-btn")
         self.install_btn.connect("clicked", lambda _b: self._operate("install"))
-        self.remove_btn = Gtk.Button(label="[ Remove ]")
+        self.remove_btn = Gtk.Button(label=f"[ {i18n.t('remove')} ]")
         self.remove_btn.add_css_class("term-btn")
         self.remove_btn.connect("clicked", lambda _b: self._operate("remove"))
         self.spinner = Gtk.Spinner()
@@ -176,7 +177,7 @@ class PardusPMWindow(Gtk.ApplicationWindow):
         return panel
 
     def _build_log_panel(self) -> Gtk.Widget:
-        panel = self._panel("Activity Log")
+        panel = self._panel(i18n.t("activity_log"))
         panel.set_size_request(-1, 110)
         panel.set_vexpand(False)
         scroll = Gtk.ScrolledWindow(vexpand=True)
@@ -233,12 +234,14 @@ class PardusPMWindow(Gtk.ApplicationWindow):
             return
         installed = self.statuses[pm.id] is Status.INSTALLED
         self.detail_title.set_text(pm.name)
-        features = "\n".join(f"  - {f}" for f in pm.features)
-        note = f"\n\nNote: {pm.notes}" if pm.notes else ""
-        self.detail_body.set_text(f"{pm.description}\n\nFeatures:\n{features}{note}")
+        features = "\n".join(f"  - {f}" for f in i18n.pm_features(pm))
+        notes = i18n.pm_notes(pm)
+        note = f"\n\n{i18n.t('note')}: {notes}" if notes else ""
+        self.detail_body.set_text(
+            f"{i18n.pm_description(pm)}\n\n{i18n.t('features')}:\n{features}{note}")
 
-        self.status_label.set_text(f"● {self.statuses[pm.id].value}" if installed
-                                   else f"○ {self.statuses[pm.id].value}")
+        marker = "●" if installed else "○"
+        self.status_label.set_text(f"{marker} {i18n.status_text(installed)}")
         self.status_label.remove_css_class("status-on")
         self.status_label.remove_css_class("status-off")
         self.status_label.add_css_class("status-on" if installed else "status-off")
@@ -264,11 +267,14 @@ class PardusPMWindow(Gtk.ApplicationWindow):
         if not pm or self._busy:
             return
 
-        title = "Install Package Manager" if action == "install" else "Remove Package Manager"
-        verb = "install" if action == "install" else "remove"
-        prep = "on" if action == "install" else "from"
-        message = f"You are about to {verb} {pm.name} {prep} this system.\n\nContinue?"
-        confirm_label = "Install" if action == "install" else "Remove"
+        if action == "install":
+            title = i18n.t("dlg_install_title")
+            message = i18n.t("confirm_install_pm", name=pm.name) + "\n\n" + i18n.t("continue_q")
+            confirm_label = i18n.t("install")
+        else:
+            title = i18n.t("dlg_remove_title")
+            message = i18n.t("confirm_remove_pm", name=pm.name) + "\n\n" + i18n.t("continue_q")
+            confirm_label = i18n.t("remove")
 
         self._confirm(title, message, confirm_label,
                       lambda: self._run_in_background(pm, action))
@@ -293,7 +299,7 @@ class PardusPMWindow(Gtk.ApplicationWindow):
 
         buttons = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10, halign=Gtk.Align.END)
         buttons.set_margin_top(14)
-        cancel = Gtk.Button(label="[ Cancel ]")
+        cancel = Gtk.Button(label=f"[ {i18n.t('cancel')} ]")
         cancel.add_css_class("term-btn")
         cancel.connect("clicked", lambda _b: dialog.close())
         ok = Gtk.Button(label=f"[ {confirm_label} ]")

@@ -1,11 +1,12 @@
 [Desktop Entry]
 Type=Application
 Name=Pardus Package Manager Add-On Tool
+Name[tr]=Pardus Paket Yöneticisi Eklenti Aracı
 Comment=Install or remove additional package management ecosystems
 Comment[tr]=Ek paket yönetim sistemlerini kur veya kaldır
 Exec=/usr/bin/pardus-pm gui
 Icon=org.pardus.PackageManagerAddon
 Terminal=false
-Categories=System;Settings;PackageManager;
+Categories=System;PackageManager;
 Keywords=package;flatpak;snap;nix;homebrew;epkg;
 StartupWMClass=org.pardus.PackageManagerAddon
