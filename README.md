@@ -71,8 +71,8 @@ make install DESTDIR=/tmp/pkg SUDO=   # unprivileged staging for packaging
 ### Installation via the .deb Package
 
 ```bash
-wget https://github.com/ENux-Distro/Pardus_PM_Add-on/releases/download/Pardus-Kernel-Swap/pardus-kernel-swap_amd64.deb      # Downloads the .deb package
-sudo apt install ./pardus-kernel-swap_amd64.deb      # Installs the .deb package via apt using sudo
+wget https://github.com/ENux-Distro/Pardus_PM_Add-on/releases/download/Pardus_PM_Add-on/pardus-pm-add-on_amd64.deb      # Downloads the .deb package
+sudo apt install ./pardus-pm-add-on_amd64.deb      # Installs the .deb package via apt using sudo
 ```
 
 ### Manual dev setup (without make)
