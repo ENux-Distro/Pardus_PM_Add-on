@@ -1,5 +1,7 @@
 # Pardus Package Manager Add-On Tool
 
+# **Status: Stable**
+
 A desktop and terminal tool for **Pardus Linux** that installs and removes
 additional package-management *ecosystems* — Flatpak, Snap, Nix, Homebrew, and
 EPkg.
